@@ -13,6 +13,7 @@
 
 #define EXAMPLE_BOARD_1 "XOXOXOXXOXOXOXXOXOXOXOXOXOXOOXOXOXOOXOX_XO"
 #define EXAMPLE_BOARD_2 "OXOXOXOOXOXOXOOXOXOXOXOXOXOXXOXOXOXXOXOXOXOXOXOXOOXOXOXOOXOX_XO"
+#define EXAMPLE_BOARD_3 "OXOOXX___OOX____XXX______O________________"
 
 #define CANT_WIN -1
 #define PLAYER_A_WIN INT_MAX
@@ -52,9 +53,11 @@ class Board {
         void clear();
 
         void operator>>(std::ostream &out);
+        std::string getBoardCode();
     
     private:
         char board[BOARD_WIDTH][BOARD_HEIGHT];
+        int lastPlay;
         void setToken(int x, int y, char token_value);
         BoardLine getLine(int start_x, int start_y, int vel_x, int vel_y, int line_size);
         BoardLine* getAllLines();
@@ -62,3 +65,4 @@ class Board {
 };
 
 LineWinValue getLinesScore(BoardLine line);
+std::string formatScore(int score);

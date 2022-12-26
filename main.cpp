@@ -7,7 +7,7 @@ using namespace std;
 void makePlayerPlay(Board* board)
 { 
     int play = 0;
-    cout << " Where do you play?";
+    cout << " Where do you play? ";
     cin >> play;
     if (play < 1 || play > BOARD_WIDTH){
         return;
@@ -19,27 +19,27 @@ void makeIAPlay(Board* board)
 {
     PlayCalculator playCalculator = PlayCalculator(*board, 0, MAX_DEPTH);
     int i = 0;
-    while (i < 10) {
-        int remainingProcess = playCalculator.process(2000);
+    while (i < 30) {
+        int remainingProcess = playCalculator.process(50000);
         i++;
-        printf("Progess: %f\t Pos Calculated %d\n", playCalculator.getProgress(), playCalculator.getPositionCalculatedCount());
+        cout << "\r";
+        printf("Progess: %f\t Pos Calculated %d                   ", playCalculator.getProgress(), playCalculator.getPositionCalculatedCount());
         if (remainingProcess != 0)
         {
             break;
         }
     }
+    cout << endl << endl;
     playCalculator.print(2); 
-    cout << endl;
     board->play(playCalculator.getBestPlay());
 }
 
 int main()
 {
-    cout << "Hello World" << endl;
     Board board = Board();
     while (true) {
         board >> cout;
-        cout << "Board Score" << board.getBoardScore() << endl;
+        cout << "Board Score: " << board.getBoardScore() << endl;
         
         if (board.getNextPlayer() == PLAYER_TOKEN)
         {

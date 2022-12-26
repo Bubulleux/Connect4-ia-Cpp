@@ -9,6 +9,7 @@
 Board::Board()
 {
     this->clear();
+    lastPlay = -1;
 }
 
 Board::Board(std::string boardTxt) {
@@ -16,6 +17,7 @@ Board::Board(std::string boardTxt) {
     for (int i = 0; i < boardTxt.length(); i++) {
         setToken(i % BOARD_WIDTH, i / BOARD_WIDTH, boardTxt[i]);    
     }
+    lastPlay = - 1;
 }
 
 char Board::getToken(int x, int y)
@@ -34,6 +36,7 @@ Board Board::copy()
             board.setToken(x, y, getToken(x, y));
         } 
     }
+    board.lastPlay = lastPlay;
     return board;
 }
 
@@ -52,6 +55,7 @@ void Board::play(int x, char token)
     if (!canPlayHere(x)) {
         return;
     }
+    lastPlay = x;
     setToken(x, getStackHeight(x), token);
 }
 
@@ -146,12 +150,35 @@ std::string Board::getTokenString(int x, int y)
 
 void Board::operator>>(std::ostream &out)
 {
+    std::cout << getBoardCode() << std::endl << std::endl;
+    if (lastPlay != -1)
+    {
+        out << " ";
+        for (int i = 0; i < lastPlay; i++) {
+            out << "   ";
+        }
+        out << "\\/" << std::endl;
+    }
     for (int y = BOARD_HEIGHT - 1; y >= 0; y--) {
         for (int x = 0; x < BOARD_WIDTH; x++) {
             out << "|" << getTokenString(x, y);
         }
         out << "|" << std::endl;
     }
+    out << " ";
+    for (int i = 0; i < BOARD_WIDTH; i++) {
+        out << i + 1 << "  ";
+    }
+    out << std::endl;
+}
+
+std::string Board::getBoardCode()
+{
+    std::string result = "";
+    for (int i = 0; i < BOARD_HEIGHT * BOARD_WIDTH; i++) {
+        result += getToken(i % BOARD_WIDTH, i / BOARD_WIDTH);
+    }
+    return result;
 }
 
 BoardLine Board::getLine(int start_x, int start_y, int vel_x, int vel_y, int size)

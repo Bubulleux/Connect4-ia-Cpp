@@ -1,5 +1,7 @@
 #include "playCalculator.h"
 #include <algorithm>
+#include <cstdint>
+#include <string>
 
 
 PlayCalculator::PlayCalculator(Board board, int depth, int maxDepth)
@@ -141,9 +143,20 @@ void PlayCalculator::print(int printMaxDepth)
         for (int j = 0; j < depth; j++) {
             std::cout << "\t";
         }
-        std::cout << i << ": " << childPlay[i]->getScore() << std::endl;
+        std::cout << i + 1 << ": " << formatScore(childPlay[i]->getScore()) << std::endl;
         childPlay[i]->print(printMaxDepth);
     }
+}
+
+std::string formatScore(int score)
+{
+    if (score > PLAYER_A_WIN - 500){
+        return "AW" + std::to_string(PLAYER_A_WIN - score);
+    }
+    if (score < PLAYER_B_WIN + 500){
+        return "BW" + std::to_string(score + PLAYER_B_WIN);
+    }
+    return std::to_string(score);
 }
 
 void PlayCalculator::calculateChildScore()
@@ -163,6 +176,14 @@ void PlayCalculator::calculateChildScore()
         maxScore = std::max(maxScore, currentScore);
     }
     score = player == TOKEN_A ? maxScore : minScore;
+    if (score > PLAYER_A_WIN - 500)
+    {
+        score -= 1;
+    }
+    if (score < PLAYER_B_WIN + 500)
+    {
+        score += 1;
+    }
 }
 
 int PlayCalculator::generateChilds(int processCount) {

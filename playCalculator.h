@@ -1,7 +1,7 @@
 #include "board.h"
 #include <ostream>
 
-#define MAX_DEPTH 5
+#define MAX_DEPTH 7
 
 class PlayCalculator
 {
