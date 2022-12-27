@@ -19,18 +19,32 @@ void makeIAPlay(Board* board)
 {
     PlayCalculator playCalculator = PlayCalculator(*board, 0, MAX_DEPTH);
     int i = 0;
-    while (i < 30) {
-        int remainingProcess = playCalculator.process(50000);
+    int remainingProcess = 0;
+    while (i < 20) {
+        remainingProcess += 50000;
+        remainingProcess = playCalculator.process(remainingProcess);
         i++;
         cout << "\r";
-        printf("Progess: %f\t Pos Calculated %d                   ", playCalculator.getProgress(), playCalculator.getPositionCalculatedCount());
-        if (remainingProcess != 0)
-        {
-            break;
-        }
+        printf("Progess: %f\t Pos Calculated %d, %d                   ", playCalculator.getProgress(), playCalculator.getPositionCalculatedCount(), i);
+        fflush(stdout);
     }
-    cout << endl << endl;
-    playCalculator.print(2); 
+    cout << endl;
+    cout << "--------------------------" << endl;
+    playCalculator.print(2);
+    cout << endl << "--------------------------" << endl;
+    playCalculator.printEndGame();
+    playCalculator.printBestPlay();
+
+    int* playsRanking = playCalculator.getPlaysRanking();
+    for (int i = 0; i < BOARD_WIDTH; i++) {
+        if (playsRanking[i] == -1)
+        {
+            continue;
+        }
+        cout << playsRanking[i] + 1 << ": " << formatScore(playCalculator.getChild(playsRanking[i]).getScore()) << ",   ";
+    }
+    cout << endl;
+    cout << formatScore(playCalculator.getScore()) << endl;
     board->play(playCalculator.getBestPlay());
 }
 

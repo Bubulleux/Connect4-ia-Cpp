@@ -41,14 +41,15 @@ void PlayCalculator::setMaxDepth(int newMaxDepth)
 
 int PlayCalculator::process(int processCount)
 {
-    if (depth >= maxDepth || boardStupidScore == PLAYER_B_WIN || boardStupidScore == PLAYER_A_WIN)
+    if (depth >= maxDepth || getScore() < PLAYER_B_WIN + 500 || getScore() > PLAYER_A_WIN - 500)
     {
         return processCount;
     }
     int remainingProcess = processCount;
-
+    childCount = 0;
     remainingProcess =  generateChilds(remainingProcess);
 
+    calculateChildScore();
     remainingProcess = processChild(remainingProcess);
     calculateChildScore();
     return remainingProcess;
@@ -74,8 +75,8 @@ int* PlayCalculator::getPlaysScore()
 
 int PlayCalculator::getBestPlay()
 {
-    int indexA = 0;
-    int indexB = 0;
+    int indexA = -1;
+    int indexB = -1;
     int maxScore = PLAYER_B_WIN;
     int minScore = PLAYER_A_WIN;
     for (int i = 0; i < BOARD_WIDTH;  i++) {
@@ -98,17 +99,47 @@ int PlayCalculator::getBestPlay()
     return player == TOKEN_A ? indexA : indexB;
 }
 
-int PlayCalculator::getPositionCalculatedCount()
+int* PlayCalculator::getPlaysRanking()
 {
-    int positionCalculatedCount = 1;
+    int* result = new int[BOARD_WIDTH];
+    for (int i = 0; i < BOARD_WIDTH; i++) {
+        result[i] = -1;
+    }
     for (int i = 0; i < BOARD_WIDTH; i++) {
         if (childPlay[i] == nullptr)
         {
             continue;
         }
-        positionCalculatedCount += childPlay[i]->getPositionCalculatedCount();
+        int currentScore = childPlay[i]->getScore();
+        result[i] = i;
+        for (int j = i - 1; j >= 0; j--) {
+            if (result[j] != -1 && (childPlay[result[j]]->getScore() > currentScore ^ player == TOKEN_B ))
+            {
+                continue;
+            }
+            int temp = result[j];
+            result[j] = i;
+            result[j + 1] = temp;
+        }
     }
-    return positionCalculatedCount;
+    return result;
+}
+
+int PlayCalculator::getPositionCalculatedCount()
+{
+    if (childCount != 0)
+    {
+        return childCount;
+    }
+    int childCount = 1;
+    for (int i = 0; i < BOARD_WIDTH; i++) {
+        if (childPlay[i] == nullptr)
+        {
+            continue;
+        }
+        childCount += childPlay[i]->getPositionCalculatedCount();
+    }
+    return childCount;
 }
 
 float PlayCalculator::getProgress()
@@ -129,6 +160,11 @@ float PlayCalculator::getProgress()
     return progess;
 }
 
+PlayCalculator PlayCalculator::getChild(int index)
+{
+    return *childPlay[index];
+}
+
 void PlayCalculator::print(int printMaxDepth)
 {
     if (depth >= printMaxDepth)
@@ -143,9 +179,40 @@ void PlayCalculator::print(int printMaxDepth)
         for (int j = 0; j < depth; j++) {
             std::cout << "\t";
         }
-        std::cout << i + 1 << ": " << formatScore(childPlay[i]->getScore()) << std::endl;
+        std::cout << i + 1 << ": " << formatScore(childPlay[i]->getScore()) << "(" << getPositionCalculatedCount() << ")" << std::endl;
         childPlay[i]->print(printMaxDepth);
     }
+}
+
+void PlayCalculator::printBestPlay()
+{
+    printBestPlay(0);
+    std::cout << std::endl;
+}
+
+void PlayCalculator::printBestPlay(int depth)
+{
+    int bestPlay = getBestPlay();
+    if (bestPlay == -1) 
+    {
+        std::cout << formatScore(boardStupidScore);
+        return;
+    }
+    std::cout << bestPlay + 1 << ":"<< formatScore(childPlay[bestPlay]->getScore()) << "(" << formatScore(boardStupidScore) << "),     ";
+    childPlay[bestPlay]->printBestPlay(depth + 1);
+}
+
+void PlayCalculator::printEndGame()
+{
+    int bestPlay = getBestPlay();
+    if (bestPlay == -1)
+    {
+        board >> std::cout;
+        calculateChildScore();
+        std::cout << formatScore(getScore()) << ", " << formatScore(board.getBoardScore()) << "," << getPositionCalculatedCount() << "," << getPlayCount() << std::endl;
+        return;
+    }
+    childPlay[bestPlay]->printEndGame();
 }
 
 std::string formatScore(int score)
@@ -161,9 +228,10 @@ std::string formatScore(int score)
 
 void PlayCalculator::calculateChildScore()
 {
-    if (!childGenerated)
+    if (!childGenerated || getPlayCount() == 0)
     {
         score = boardStupidScore;
+        return;
     }
     int minScore = PLAYER_A_WIN;
     int maxScore = PLAYER_B_WIN;
@@ -177,7 +245,7 @@ void PlayCalculator::calculateChildScore()
     }
     score = player == TOKEN_A ? maxScore : minScore;
     if (score > PLAYER_A_WIN - 500)
-    {
+    { 
         score -= 1;
     }
     if (score < PLAYER_B_WIN + 500)
@@ -216,16 +284,41 @@ bool PlayCalculator::generateChild(int playPos)
     return true;
 }
 
-int PlayCalculator::processChild(int processCount)
+int PlayCalculator::getPlayCount()
 {
-    int remainingProcess = processCount;
+    if (!childGenerated)
+    {
+        return 0;
+    }
+    int result = 0;
     for (int i = 0; i < BOARD_WIDTH; i++) {
         if (childPlay[i] == nullptr)
         {
             continue;
         }
-        remainingProcess = childPlay[i]->process(remainingProcess);
+        result++;
     }
-    return remainingProcess;
+    return result;
+}
+
+int PlayCalculator::processChild(int calculToken)
+{
+    int remainingToken = calculToken;
+    int playsCount = getPlayCount();
+    if (playsCount == 0)
+    {
+        return calculToken;
+    }
+    for (int i = 0; i < BOARD_WIDTH; i++) {
+        if (childPlay[i] == nullptr || childPlay[i]->getScore() > PLAYER_A_WIN - 500 || childPlay[i]->getScore() < PLAYER_B_WIN + 500)
+        {
+            continue;
+        }
+        int usedToken = remainingToken / playsCount;
+        remainingToken -= usedToken;
+        remainingToken += childPlay[i]->process(usedToken);
+    }
+    return remainingToken;
+    
 }
 
