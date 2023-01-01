@@ -28,15 +28,15 @@ char Board::getToken(int x, int y)
     return this->board[x][y];
 }
 
-Board Board::copy()
+Board* Board::copy()
 {
-    Board board = Board();
+    Board* board = new Board();
     for (int x = 0; x < BOARD_WIDTH; x++) {
         for (int y = 0; y < BOARD_HEIGHT; y++) {
-            board.setToken(x, y, getToken(x, y));
+            board->setToken(x, y, getToken(x, y));
         } 
     }
-    board.lastPlay = lastPlay;
+    board->lastPlay = lastPlay;
     return board;
 }
 
@@ -137,10 +137,10 @@ std::string Board::getTokenString(int x, int y)
             return "  ";
             break;
         case TOKEN_A:
-            return "\u2588\u2588";
+            return "\u2B24 ";
             break;
         case TOKEN_B:
-            return "\u2592\u2592";
+            return "\u25EF ";
             break;
     
     }
@@ -232,8 +232,8 @@ int Board::getBoardScore()
     for (int i = 0; i < BOARD_LINES_COUNT; i++) {
         BoardLine line = lines[i];
         LineWinValue score = getLinesScore(line);
-        aScore += score.a_best_alignment ^ 2 + score.a_token_count;
-        bScore += score.b_best_alignment ^2 + score.b_best_alignment;
+        aScore += score.a_token_count * score.a_token_count;
+        bScore += score.b_token_count * score.b_token_count;
         if (score.a_best_alignment >= 4 || score.b_best_alignment >= 4) {
             return score.a_best_alignment >= 4 ? PLAYER_A_WIN : PLAYER_B_WIN;
         }

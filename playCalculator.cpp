@@ -1,23 +1,32 @@
 #include "playCalculator.h"
 #include <algorithm>
 #include <cstdint>
+#include <cstdio>
+#include <cstdlib>
 #include <string>
+#include <unordered_map>
 
 
-PlayCalculator::PlayCalculator(Board board, int depth, int maxDepth)
+PlayCalculator::PlayCalculator(Board* board, int depth, int maxDepth, std::unordered_map<std::string, PlayCalculator*>* playsHashMap)
 {
-    this->board = board;
+    this->board = board->copy();
     this->depth = depth;
     this->maxDepth = maxDepth;
-    boardStupidScore = board.getBoardScore();
+    this->playsHashMap = playsHashMap;
+    boardStupidScore = board->getBoardScore();
     score = boardStupidScore;
     childGenerated = false;
-    player = board.getNextPlayer();
+    player = board->getNextPlayer();
+    childCount = 0; 
     for (int i = 0; i < BOARD_WIDTH; i++) {
         childPlay[i] = nullptr;
     }
 }
 
+PlayCalculator::~PlayCalculator()
+{
+    delete board;
+}
 
 void PlayCalculator::setDepth(int newDepth) 
 {
@@ -47,9 +56,8 @@ int PlayCalculator::process(int processCount)
     }
     int remainingProcess = processCount;
     childCount = 0;
-    remainingProcess =  generateChilds(remainingProcess);
+    remainingProcess = generateChilds(remainingProcess);
 
-    calculateChildScore();
     remainingProcess = processChild(remainingProcess);
     calculateChildScore();
     return remainingProcess;
@@ -152,7 +160,7 @@ float PlayCalculator::getProgress()
     for (int i = 0; i < BOARD_WIDTH; i++) {
         if (childPlay[i] == nullptr)
         {
-            progess += board.canPlayHere(i) ? 0 : 1.0 / (float)BOARD_WIDTH;
+            progess += board->canPlayHere(i) ? 0 : 1.0 / (float)BOARD_WIDTH;
             continue;
         }
         progess += childPlay[i]->getProgress() / (float)BOARD_WIDTH;
@@ -160,9 +168,9 @@ float PlayCalculator::getProgress()
     return progess;
 }
 
-PlayCalculator PlayCalculator::getChild(int index)
+PlayCalculator* PlayCalculator::getChild(int index)
 {
-    return *childPlay[index];
+    return childPlay[index];
 }
 
 void PlayCalculator::print(int printMaxDepth)
@@ -179,7 +187,7 @@ void PlayCalculator::print(int printMaxDepth)
         for (int j = 0; j < depth; j++) {
             std::cout << "\t";
         }
-        std::cout << i + 1 << ": " << formatScore(childPlay[i]->getScore()) << "(" << getPositionCalculatedCount() << ")" << std::endl;
+        std::cout << i + 1 << ": " << formatScore(childPlay[i]->getScore()) << "(" << childPlay[i]->getPositionCalculatedCount() << ")" << std::endl;
         childPlay[i]->print(printMaxDepth);
     }
 }
@@ -207,9 +215,9 @@ void PlayCalculator::printEndGame()
     int bestPlay = getBestPlay();
     if (bestPlay == -1)
     {
-        board >> std::cout;
+        *board >> std::cout;
         calculateChildScore();
-        std::cout << formatScore(getScore()) << ", " << formatScore(board.getBoardScore()) << "," << getPositionCalculatedCount() << "," << getPlayCount() << std::endl;
+        std::cout << formatScore(getScore()) << ", " << formatScore(board->getBoardScore()) << "," << getPositionCalculatedCount() << "," << getPlayCount() << std::endl;
         return;
     }
     childPlay[bestPlay]->printEndGame();
@@ -275,12 +283,22 @@ int PlayCalculator::generateChilds(int processCount) {
 bool PlayCalculator::generateChild(int playPos)
 {
     
-    if (childPlay[playPos] != nullptr || !board.canPlayHere(playPos)){
+    if (childPlay[playPos] != nullptr || !board->canPlayHere(playPos)){
         return false;
     }
-    Board newBoard = board.copy();
-    newBoard.play(playPos);
-    childPlay[playPos] = new PlayCalculator(newBoard, depth + 1, maxDepth);
+    Board* newBoard = board->copy();
+    newBoard->play(playPos);
+    std::string boardString = newBoard->getBoardCode();
+    if (playsHashMap->find(boardString) == playsHashMap->end())
+    {
+        childPlay[playPos] = new PlayCalculator(newBoard, depth + 1, maxDepth, playsHashMap);
+        (*playsHashMap)[boardString] = childPlay[playPos];
+    }
+    else 
+    {
+        childPlay[playPos] = (*playsHashMap)[boardString];
+    }
+    delete newBoard;
     return true;
 }
 
@@ -309,12 +327,33 @@ int PlayCalculator::processChild(int calculToken)
     {
         return calculToken;
     }
+
+    float* playsCalculValue = new float[BOARD_WIDTH];
+    float playsCalculeValueSum = 0.0;
     for (int i = 0; i < BOARD_WIDTH; i++) {
         if (childPlay[i] == nullptr || childPlay[i]->getScore() > PLAYER_A_WIN - 500 || childPlay[i]->getScore() < PLAYER_B_WIN + 500)
         {
+            playsCalculValue[i] = 0.0f;
             continue;
         }
-        int usedToken = remainingToken / playsCount;
+        float playValue = 0;
+        int score = childPlay[i]->getScore();
+        if (score > 0 ^ player == TOKEN_B)
+        {
+           playValue = (float)abs(score) * POSITIVE_CHILD_MULTIPLIER + CHILD_MIDEL_CURSOR;
+        } 
+        else 
+        {
+            playValue = CHILD_MIDEL_CURSOR / ((float)abs(score) * NEGATIVE_CHILD_MULTIPLIER + 1);
+        }
+        playsCalculeValueSum += playValue;
+        playsCalculValue[i] = playValue;
+    }
+
+    for (int i = 0; i < BOARD_WIDTH; i++) {
+        if (playsCalculValue[i] == 0) continue;
+
+        int usedToken = (int)((float)calculToken * (playsCalculValue[i] / playsCalculeValueSum));
         remainingToken -= usedToken;
         remainingToken += childPlay[i]->process(usedToken);
     }

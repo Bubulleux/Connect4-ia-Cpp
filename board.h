@@ -14,6 +14,8 @@
 #define EXAMPLE_BOARD_1 "XOXOXOXXOXOXOXXOXOXOXOXOXOXOOXOXOXOOXOX_XO"
 #define EXAMPLE_BOARD_2 "OXOXOXOOXOXOXOOXOXOXOXOXOXOXXOXOXOXXOXOXOXOXOXOXOOXOXOXOOXOX_XO"
 #define EXAMPLE_BOARD_3 "OXOOXX___OOX____XXX______O________________"
+#define EXAMPLE_BOARD_4 "OOXXOXO__XOX_O___XX_O___OX_____XO_________"
+#define EXAMPLE_BOARD_5 "_OXXOX____OX_____XO_____O______X______O___"
 
 #define CANT_WIN -1
 #define PLAYER_A_WIN INT_MAX
@@ -37,7 +39,7 @@ class Board {
     public:
         Board();
         Board(std::string boardTXT);
-        Board copy();
+        Board* copy();
         char getToken(int x, int y);
         std::string getTokenString(int x, int y);
         void play(int x);

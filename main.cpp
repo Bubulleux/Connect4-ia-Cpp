@@ -1,6 +1,8 @@
 #include <algorithm>
 #include <cstdio>
 #include <iostream>
+#include <string>
+#include <unordered_map>
 #include "main.h"
 using namespace std;
 
@@ -15,42 +17,52 @@ void makePlayerPlay(Board* board)
     board->play(play - 1);
 }
 
-void makeIAPlay(Board* board)
+void makeIAPlay(Board* board, unordered_map<std::string, PlayCalculator*>* playsHashMap)
 {
-    PlayCalculator playCalculator = PlayCalculator(*board, 0, MAX_DEPTH);
+    PlayCalculator* playCalculator = nullptr;
+    if (playsHashMap->find(board->getBoardCode()) == playsHashMap->end())
+    {
+        playCalculator = new PlayCalculator(board, 0, MAX_DEPTH, playsHashMap);
+    }
+    else {
+        playCalculator = (*playsHashMap)[board->getBoardCode()];
+        playCalculator->setDepth(0);
+    }
+
     int i = 0;
     int remainingProcess = 0;
-    while (i < 20) {
+    while (i < 10) {
         remainingProcess += 50000;
-        remainingProcess = playCalculator.process(remainingProcess);
+        remainingProcess = playCalculator->process(remainingProcess);
         i++;
         cout << "\r";
-        printf("Progess: %f\t Pos Calculated %d, %d                   ", playCalculator.getProgress(), playCalculator.getPositionCalculatedCount(), i);
+        printf("Progess: %f\t Pos Calculated %d, %d                   ", playCalculator->getProgress(), playCalculator->getPositionCalculatedCount(), i);
         fflush(stdout);
     }
     cout << endl;
     cout << "--------------------------" << endl;
-    playCalculator.print(2);
+    playCalculator->print(2);
     cout << endl << "--------------------------" << endl;
-    playCalculator.printEndGame();
-    playCalculator.printBestPlay();
+    playCalculator->printEndGame();
+    playCalculator->printBestPlay();
 
-    int* playsRanking = playCalculator.getPlaysRanking();
+    int* playsRanking = playCalculator->getPlaysRanking();
     for (int i = 0; i < BOARD_WIDTH; i++) {
         if (playsRanking[i] == -1)
         {
             continue;
         }
-        cout << playsRanking[i] + 1 << ": " << formatScore(playCalculator.getChild(playsRanking[i]).getScore()) << ",   ";
+        cout << playsRanking[i] + 1 << ": " << formatScore(playCalculator->getChild(playsRanking[i])->getScore()) << ",   ";
     }
     cout << endl;
-    cout << formatScore(playCalculator.getScore()) << endl;
-    board->play(playCalculator.getBestPlay());
+    cout << formatScore(playCalculator->getScore()) << endl;
+    board->play(playCalculator->getBestPlay());
 }
 
 int main()
 {
-    Board board = Board();
+    Board board = Board(EXAMPLE_BOARD_5);
+    unordered_map<std::string, PlayCalculator*>* playsHashMap = new unordered_map<string, PlayCalculator*>();
     while (true) {
         board >> cout;
         cout << "Board Score: " << board.getBoardScore() << endl;
@@ -60,7 +72,7 @@ int main()
             makePlayerPlay(&board);
         } else 
         {
-            makeIAPlay(&board);
+            makeIAPlay(&board, playsHashMap);
         }
 
         char win = board.getWinPlayer();
