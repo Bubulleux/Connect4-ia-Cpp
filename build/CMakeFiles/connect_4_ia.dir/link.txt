@@ -1,1 +1,1 @@
-/usr/bin/c++ -g -rdynamic CMakeFiles/connect_4_ia.dir/main.cpp.o CMakeFiles/connect_4_ia.dir/board.cpp.o CMakeFiles/connect_4_ia.dir/playCalculator.cpp.o -o connect_4_ia 
+/usr/bin/c++ -rdynamic CMakeFiles/connect_4_ia.dir/main.cpp.o CMakeFiles/connect_4_ia.dir/board.cpp.o CMakeFiles/connect_4_ia.dir/playCalculator.cpp.o -o connect_4_ia 

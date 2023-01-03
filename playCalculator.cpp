@@ -1,5 +1,6 @@
 #include "playCalculator.h"
 #include <algorithm>
+#include <chrono>
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
@@ -266,6 +267,7 @@ int PlayCalculator::generateChilds(int processCount) {
     if (childGenerated || processCount == 0){
         return processCount;
     }
+    auto start = std::chrono::system_clock::now();
     int remainingProcess = processCount;
     
     for (int i = 0; i < BOARD_WIDTH; i++) { 
@@ -277,6 +279,8 @@ int PlayCalculator::generateChilds(int processCount) {
         }
     }
     childGenerated = true;
+    auto stop = std::chrono::system_clock::now();
+    *generateChildTime += stop - start;
     return remainingProcess;
 }
 
@@ -292,6 +296,7 @@ bool PlayCalculator::generateChild(int playPos)
     if (playsHashMap->find(boardString) == playsHashMap->end())
     {
         childPlay[playPos] = new PlayCalculator(newBoard, depth + 1, maxDepth, playsHashMap);
+        childPlay[playPos]->generateChildTime = generateChildTime;
         (*playsHashMap)[boardString] = childPlay[playPos];
     }
     else 

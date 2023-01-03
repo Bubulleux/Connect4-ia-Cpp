@@ -1,13 +1,14 @@
 #include "board.h"
 #include <ostream>
 #include <unordered_map>
+#include <chrono>
 
 #define MAX_DEPTH 40
 #define MIN_DEPTH 2
 
 // Child proccessing Value
-#define CHILD_MIDEL_CURSOR 20
-#define POSITIVE_CHILD_MULTIPLIER 2
+#define CHILD_MIDEL_CURSOR 10
+#define POSITIVE_CHILD_MULTIPLIER 3
 #define NEGATIVE_CHILD_MULTIPLIER 2
 
 
@@ -30,6 +31,7 @@ class PlayCalculator
         void print(int printMaxDepth);
         void printBestPlay();
         void printEndGame();
+        std::chrono::duration<double>* generateChildTime;
 
     private:
         Board* board;
