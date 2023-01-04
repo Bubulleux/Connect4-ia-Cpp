@@ -11,15 +11,20 @@
 #define POSITIVE_CHILD_MULTIPLIER 3
 #define NEGATIVE_CHILD_MULTIPLIER 2
 
+#define MAX_CHILD(depth) depth - MIN_DEPTH > BOARD_WIDTH ? 2 : BOARD_WIDTH - depth + MIN_DEPTH
+
 
 class PlayCalculator
 {
     public:
-        PlayCalculator(Board* board, int depth, int maxDepth, std::unordered_map<std::string, PlayCalculator*>* playsHashMap);
+        PlayCalculator(Board* board);
         ~PlayCalculator();
+
         void setDepth(int newDepth);
-        void setMaxDepth(int newMaxDepth);
-        int process(int processCount);
+
+        void process();
+        void process(int processDepth);
+
         int getScore();
         int* getPlaysScore();
         int getBestPlay();
@@ -28,12 +33,14 @@ class PlayCalculator
         float getProgress();
         PlayCalculator* getChild(int index);
         int getPlayCount();
+
         void print(int printMaxDepth);
         void printBestPlay();
         void printEndGame();
-        std::chrono::duration<double>* generateChildTime;
 
     private:
+        PlayCalculator(Board* board, int depth, int maxDepth, std::unordered_map<std::string, PlayCalculator*>* playsHashMap);
+
         Board* board;
         int depth;
         int maxDepth;
@@ -44,10 +51,13 @@ class PlayCalculator
         int childCount;
         char player;
         bool childGenerated;
+
         void calculateChildScore();
-        int generateChilds(int processCount);
-        bool generateChild(int playPos);
-        int processChild(int processCount);
+        void generateChilds();
+        void generateChild(int playPos);
+        void disableChilds();
+        void processChild();
+
         void printBestPlay(int depth);
 
 };

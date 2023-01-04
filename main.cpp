@@ -20,29 +20,16 @@ void makePlayerPlay(Board* board)
 
 void makeIAPlay(Board* board, unordered_map<std::string, PlayCalculator*>* playsHashMap)
 {
-    PlayCalculator* playCalculator = nullptr;
-    if (playsHashMap->find(board->getBoardCode()) == playsHashMap->end())
-    {
-        playCalculator = new PlayCalculator(board, 0, MAX_DEPTH, playsHashMap);
-        playCalculator->generateChildTime = 0;
-    }
-    else {
-        playCalculator = (*playsHashMap)[board->getBoardCode()];
-        playCalculator->setDepth(0);
-    }
-    playCalculator->generateChildTime = new std::chrono::duration<double>;
-    *(playCalculator->generateChildTime) = std::chrono::seconds::zero();
+    PlayCalculator* playCalculator = new PlayCalculator(board);
 
     int i = 0;
     int remainingProcess = 0;
     auto start = chrono::system_clock::now();
-    while (i < 1) {
-        remainingProcess += 1000000;
-        remainingProcess = playCalculator->process(remainingProcess);
-        i++;
+    for (int i = 0; i < 10; i++)
+    {
+        playCalculator->process();
         cout << "\r";
-        printf("Progess: %f\t Pos Calculated %d, %d                   ", playCalculator->getProgress(), playCalculator->getPositionCalculatedCount(), i);
-        fflush(stdout);
+        cout << i << "/10              ";
     }
     auto stop = chrono::system_clock::now();
     cout << endl;
@@ -62,7 +49,6 @@ void makeIAPlay(Board* board, unordered_map<std::string, PlayCalculator*>* plays
     }
     cout << endl;
     cout << formatScore(playCalculator->getScore()) << endl;
-    cout << playCalculator->generateChildTime->count() << endl;
     chrono::duration<double> diffTime = stop - start;
     cout << diffTime.count() << endl;
     board->play(playCalculator->getBestPlay());

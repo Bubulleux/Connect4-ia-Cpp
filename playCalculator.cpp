@@ -6,7 +6,12 @@
 #include <cstdlib>
 #include <string>
 #include <unordered_map>
+using namespace std;
 
+PlayCalculator::PlayCalculator(Board* board)
+{
+    PlayCalculator(board, 0, 0, new unordered_map<string, PlayCalculator*>);
+}
 
 PlayCalculator::PlayCalculator(Board* board, int depth, int maxDepth, std::unordered_map<std::string, PlayCalculator*>* playsHashMap)
 {
@@ -39,29 +44,22 @@ void PlayCalculator::setDepth(int newDepth)
     }
 }
 
-void PlayCalculator::setMaxDepth(int newMaxDepth)
+void PlayCalculator::process()
 {
-    maxDepth = newMaxDepth;
-    for (int i = 0; i < BOARD_WIDTH; i++) {
-        if (childPlay[i] != nullptr) {
-            childPlay[i]->setMaxDepth(maxDepth);
-        }
-    }
+    process(maxDepth + 1);
 }
 
-int PlayCalculator::process(int processCount)
+void PlayCalculator::process(int processDepth)
 {
-    if (depth >= maxDepth || getScore() < PLAYER_B_WIN + 500 || getScore() > PLAYER_A_WIN - 500)
-    {
-        return processCount;
-    }
-    int remainingProcess = processCount;
-    childCount = 0;
-    remainingProcess = generateChilds(remainingProcess);
+    if (depth >= MAX_DEPTH || getScore() < PLAYER_B_WIN + 500 || getScore() > PLAYER_A_WIN - 500) return;
 
-    remainingProcess = processChild(remainingProcess);
+    maxDepth = processDepth;
+    childCount = 0;
+    generateChilds();
+
+    disableChilds();
+    processChild();
     calculateChildScore();
-    return remainingProcess;
 }
 
 int PlayCalculator::getScore()
@@ -263,40 +261,26 @@ void PlayCalculator::calculateChildScore()
     }
 }
 
-int PlayCalculator::generateChilds(int processCount) {
-    if (childGenerated || processCount == 0){
-        return processCount;
-    }
-    auto start = std::chrono::system_clock::now();
-    int remainingProcess = processCount;
-    
+void PlayCalculator::generateChilds() {
+    if (childGenerated) return;
+
     for (int i = 0; i < BOARD_WIDTH; i++) { 
-        bool sucess = generateChild(i);
-        remainingProcess -= sucess ? 1 : 0;
-        if (remainingProcess == 0)
-        {
-            return 0;
-        }
+        generateChild(i);
     }
     childGenerated = true;
-    auto stop = std::chrono::system_clock::now();
-    *generateChildTime += stop - start;
-    return remainingProcess;
 }
 
-bool PlayCalculator::generateChild(int playPos)
+void PlayCalculator::generateChild(int playPos)
 {
     
-    if (childPlay[playPos] != nullptr || !board->canPlayHere(playPos)){
-        return false;
-    }
+    if (childPlay[playPos] != nullptr || !board->canPlayHere(playPos)) return;
+
     Board* newBoard = board->copy();
     newBoard->play(playPos);
     std::string boardString = newBoard->getBoardCode();
     if (playsHashMap->find(boardString) == playsHashMap->end())
     {
         childPlay[playPos] = new PlayCalculator(newBoard, depth + 1, maxDepth, playsHashMap);
-        childPlay[playPos]->generateChildTime = generateChildTime;
         (*playsHashMap)[boardString] = childPlay[playPos];
     }
     else 
@@ -304,7 +288,6 @@ bool PlayCalculator::generateChild(int playPos)
         childPlay[playPos] = (*playsHashMap)[boardString];
     }
     delete newBoard;
-    return true;
 }
 
 int PlayCalculator::getPlayCount()
@@ -324,45 +307,26 @@ int PlayCalculator::getPlayCount()
     return result;
 }
 
-int PlayCalculator::processChild(int calculToken)
+void PlayCalculator::disableChilds()
 {
-    int remainingToken = calculToken;
-    int playsCount = getPlayCount();
-    if (playsCount == 0)
-    {
-        return calculToken;
-    }
+    if (maxDepth - depth < MIN_DEPTH) return;
 
-    float* playsCalculValue = new float[BOARD_WIDTH];
-    float playsCalculeValueSum = 0.0;
-    for (int i = 0; i < BOARD_WIDTH; i++) {
-        if (childPlay[i] == nullptr || childPlay[i]->getScore() > PLAYER_A_WIN - 500 || childPlay[i]->getScore() < PLAYER_B_WIN + 500)
-        {
-            playsCalculValue[i] = 0.0f;
-            continue;
-        }
-        float playValue = 0;
-        int score = childPlay[i]->getScore();
-        if (score > 0 ^ player == TOKEN_B)
-        {
-           playValue = (float)abs(score) * POSITIVE_CHILD_MULTIPLIER + CHILD_MIDEL_CURSOR;
-        } 
-        else 
-        {
-            playValue = CHILD_MIDEL_CURSOR / ((float)abs(score) * NEGATIVE_CHILD_MULTIPLIER + 1);
-        }
-        playsCalculeValueSum += playValue;
-        playsCalculValue[i] = playValue;
-    }
+    int maxChild = MAX_CHILD(maxDepth - depth);
+    int previousMaxChild = MAX_CHILD(maxDepth - depth - 1);
 
-    for (int i = 0; i < BOARD_WIDTH; i++) {
-        if (playsCalculValue[i] == 0) continue;
-
-        int usedToken = (int)((float)calculToken * (playsCalculValue[i] / playsCalculeValueSum));
-        remainingToken -= usedToken;
-        remainingToken += childPlay[i]->process(usedToken);
-    }
-    return remainingToken;
+    if (previousMaxChild == maxChild) return;
     
+    int* bestPlay = getPlaysRanking();
+    for (int i = maxChild; i < BOARD_WIDTH; i++) {
+        childPlay[i] = nullptr;
+    }
+}
+
+void PlayCalculator::processChild()
+{
+    for (int i = 0; i < BOARD_WIDTH; i++) {
+        if (childPlay[i] == nullptr) continue;
+        childPlay[i]->process(maxDepth);
+    }
 }
 
