@@ -1,3 +1,0 @@
-/home/ulysse/Project/C/Connect4-ia-Cpp/build/CMakeFiles/connect_4_ia.dir
-/home/ulysse/Project/C/Connect4-ia-Cpp/build/CMakeFiles/edit_cache.dir
-/home/ulysse/Project/C/Connect4-ia-Cpp/build/CMakeFiles/rebuild_cache.dir
