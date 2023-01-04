@@ -10,7 +10,7 @@ using namespace std;
 
 PlayCalculator::PlayCalculator(Board* board)
 {
-    PlayCalculator(board, 0, 0, new unordered_map<string, PlayCalculator*>);
+    new (this) PlayCalculator(board, 0, 0, new unordered_map<string, PlayCalculator*>);
 }
 
 PlayCalculator::PlayCalculator(Board* board, int depth, int maxDepth, std::unordered_map<std::string, PlayCalculator*>* playsHashMap)
@@ -51,7 +51,7 @@ void PlayCalculator::process()
 
 void PlayCalculator::process(int processDepth)
 {
-    if (depth >= MAX_DEPTH || getScore() < PLAYER_B_WIN + 500 || getScore() > PLAYER_A_WIN - 500) return;
+    if (depth >= processDepth || depth >= MAX_DEPTH || getScore() < PLAYER_B_WIN + 500 || getScore() > PLAYER_A_WIN - 500) return;
 
     maxDepth = processDepth;
     childCount = 0;
@@ -317,8 +317,9 @@ void PlayCalculator::disableChilds()
     if (previousMaxChild == maxChild) return;
     
     int* bestPlay = getPlaysRanking();
-    for (int i = maxChild; i < BOARD_WIDTH; i++) {
-        childPlay[i] = nullptr;
+    for (int i = maxChild + 1; i < BOARD_WIDTH; i++) {
+        if (bestPlay[i] == -1) continue;
+        childPlay[bestPlay[i]] = nullptr;
     }
 }
 

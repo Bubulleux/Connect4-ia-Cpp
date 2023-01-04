@@ -30,6 +30,7 @@ void makeIAPlay(Board* board, unordered_map<std::string, PlayCalculator*>* plays
         playCalculator->process();
         cout << "\r";
         cout << i << "/10              ";
+        flush(cout);
     }
     auto stop = chrono::system_clock::now();
     cout << endl;

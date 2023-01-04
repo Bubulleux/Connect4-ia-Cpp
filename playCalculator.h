@@ -4,14 +4,15 @@
 #include <chrono>
 
 #define MAX_DEPTH 40
-#define MIN_DEPTH 2
+#define MIN_DEPTH 5
 
 // Child proccessing Value
 #define CHILD_MIDEL_CURSOR 10
 #define POSITIVE_CHILD_MULTIPLIER 3
 #define NEGATIVE_CHILD_MULTIPLIER 2
 
-#define MAX_CHILD(depth) depth - MIN_DEPTH > BOARD_WIDTH ? 2 : BOARD_WIDTH - depth + MIN_DEPTH
+#define SLOP_MULTIPLYER -0.2
+#define MAX_CHILD(depth) std::max(2.0, SLOP_MULTIPLYER * (float)(depth - MIN_DEPTH) + BOARD_WIDTH)
 
 
 class PlayCalculator
