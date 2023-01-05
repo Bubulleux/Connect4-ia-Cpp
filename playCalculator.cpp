@@ -6,6 +6,7 @@
 #include <cstdlib>
 #include <string>
 #include <unordered_map>
+#include <math.h>
 using namespace std;
 
 PlayCalculator::PlayCalculator(Board* board)
@@ -307,15 +308,26 @@ int PlayCalculator::getPlayCount()
     return result;
 }
 
+int getMaxChild(int depth)
+{
+    return (int)(pow(2, (double)(- depth + MIN_DEPTH) * SLOP_MULTIPLYER)
+            * (double)(BOARD_WIDTH - 2) + 2);
+}
+
 void PlayCalculator::disableChilds()
 {
     if (maxDepth - depth < MIN_DEPTH) return;
 
-    int maxChild = MAX_CHILD(maxDepth - depth);
-    int previousMaxChild = MAX_CHILD(maxDepth - depth - 1);
+    int maxChild = getMaxChild(maxDepth - depth);
+    int previousMaxChild = getMaxChild(maxDepth - depth - 1);
 
     if (previousMaxChild == maxChild) return;
     
+    if (depth == 0)
+    {
+        printf("%d\t%d\t%d", maxChild, previousMaxChild, maxDepth);
+    }
+
     int* bestPlay = getPlaysRanking();
     for (int i = maxChild + 1; i < BOARD_WIDTH; i++) {
         if (bestPlay[i] == -1) continue;

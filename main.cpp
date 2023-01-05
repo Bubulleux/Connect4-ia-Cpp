@@ -25,11 +25,11 @@ void makeIAPlay(Board* board, unordered_map<std::string, PlayCalculator*>* plays
     int i = 0;
     int remainingProcess = 0;
     auto start = chrono::system_clock::now();
-    for (int i = 0; i < 10; i++)
+    for (int i = 0; i < 20; i++)
     {
         playCalculator->process();
         cout << "\r";
-        cout << i << "/10              ";
+        cout << i << "/10                                          ";
         flush(cout);
     }
     auto stop = chrono::system_clock::now();
