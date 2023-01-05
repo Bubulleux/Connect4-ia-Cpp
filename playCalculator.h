@@ -4,10 +4,10 @@
 #include <chrono>
 
 #define MAX_DEPTH 40
-#define MIN_DEPTH 5
+#define MIN_DEPTH 4
 
 // Child proccessing Value
-#define CHILD_MIDEL_CURSOR 10-
+#define CHILD_MIDEL_CURSOR 10
 #define POSITIVE_CHILD_MULTIPLIER 3
 #define NEGATIVE_CHILD_MULTIPLIER 2
 

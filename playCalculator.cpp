@@ -7,6 +7,7 @@
 #include <string>
 #include <unordered_map>
 #include <math.h>
+#include <thread>
 using namespace std;
 
 PlayCalculator::PlayCalculator(Board* board)

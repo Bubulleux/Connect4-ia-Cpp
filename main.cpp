@@ -28,8 +28,9 @@ void makeIAPlay(Board* board, unordered_map<std::string, PlayCalculator*>* plays
     for (int i = 0; i < 20; i++)
     {
         playCalculator->process();
+        cout << "                                                               ";
         cout << "\r";
-        cout << i << "/10                                          ";
+        cout << i << " " << playCalculator->getPositionCalculatedCount();
         flush(cout);
     }
     auto stop = chrono::system_clock::now();
