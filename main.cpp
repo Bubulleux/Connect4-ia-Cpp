@@ -25,13 +25,15 @@ void makeIAPlay(Board* board, unordered_map<std::string, PlayCalculator*>* plays
     int i = 0;
     int remainingProcess = 0;
     auto start = chrono::system_clock::now();
-    for (int i = 0; i < 20; i++)
-    {
-        playCalculator->process();
-        cout << "                                                               ";
+    auto now = start;
+    bool canProcessMore = true;
+    while (((chrono::duration<double>)(now - start)).count() < 30 && canProcessMore) {
+        canProcessMore = playCalculator->process();
+        now = chrono::system_clock::now();
         cout << "\r";
-        cout << i << " " << playCalculator->getPositionCalculatedCount();
+        printf("%d                          ", i);
         flush(cout);
+        i++;
     }
     auto stop = chrono::system_clock::now();
     cout << endl;
@@ -53,7 +55,16 @@ void makeIAPlay(Board* board, unordered_map<std::string, PlayCalculator*>* plays
     cout << formatScore(playCalculator->getScore()) << endl;
     chrono::duration<double> diffTime = stop - start;
     cout << diffTime.count() << endl;
-    board->play(playCalculator->getBestPlay());
+    int bestPlay = playCalculator->getBestPlay();
+    if (bestPlay == -1)
+    {
+        printf("Error no best play\n");
+        exit(1);
+    }
+    playCalculator->recursiveDelete();
+    delete playCalculator;
+    delete  [] playsRanking;
+    board->play(bestPlay);
 }
 
 int main()

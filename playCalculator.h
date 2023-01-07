@@ -1,4 +1,5 @@
 #include "board.h"
+#include <future>
 #include <ostream>
 #include <unordered_map>
 #include <chrono>
@@ -20,11 +21,12 @@ class PlayCalculator
     public:
         PlayCalculator(Board* board);
         ~PlayCalculator();
+        void recursiveDelete();
 
         void setDepth(int newDepth);
 
-        void process();
-        void process(int processDepth);
+        bool process();
+        bool process(int processDepth);
 
         int getScore();
         int* getPlaysScore();
@@ -57,8 +59,11 @@ class PlayCalculator
         void generateChilds();
         void generateChild(int playPos);
         void disableChilds();
-        void processChild();
+        bool processChild();
+        bool processChildAsync();
 
         void printBestPlay(int depth);
 
 };
+
+void newChildThread(PlayCalculator* child, int maxDepth, std::promise<bool> && promise);

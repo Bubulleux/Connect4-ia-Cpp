@@ -8,6 +8,7 @@
 #include <unordered_map>
 #include <math.h>
 #include <thread>
+#include <future>
 using namespace std;
 
 PlayCalculator::PlayCalculator(Board* board)
@@ -22,6 +23,7 @@ PlayCalculator::PlayCalculator(Board* board, int depth, int maxDepth, std::unord
     this->maxDepth = maxDepth;
     this->playsHashMap = playsHashMap;
     boardStupidScore = board->getBoardScore();
+    score = 0;
     score = boardStupidScore;
     childGenerated = false;
     player = board->getNextPlayer();
@@ -36,6 +38,15 @@ PlayCalculator::~PlayCalculator()
     delete board;
 }
 
+void PlayCalculator::recursiveDelete()
+{
+    for (int i = 0; i < BOARD_WIDTH; i++) {
+        if (childPlay[i] == nullptr) continue;
+        childPlay[i]->recursiveDelete();
+        delete childPlay[i];
+    }
+}
+
 void PlayCalculator::setDepth(int newDepth) 
 {
     depth = newDepth;
@@ -46,22 +57,24 @@ void PlayCalculator::setDepth(int newDepth)
     }
 }
 
-void PlayCalculator::process()
+bool PlayCalculator::process()
 {
-    process(maxDepth + 1);
+    return process(maxDepth + 1);
 }
 
-void PlayCalculator::process(int processDepth)
+bool PlayCalculator::process(int processDepth)
 {
-    if (depth >= processDepth || depth >= MAX_DEPTH || getScore() < PLAYER_B_WIN + 500 || getScore() > PLAYER_A_WIN - 500) return;
+    if (depth >= processDepth) return true;
+    if (depth >= MAX_DEPTH || getScore() < PLAYER_B_WIN + 500 || getScore() > PLAYER_A_WIN - 500) return false;
 
     maxDepth = processDepth;
     childCount = 0;
     generateChilds();
 
     disableChilds();
-    processChild();
+    bool result = processChild();
     calculateChildScore();
+    return result;
 }
 
 int PlayCalculator::getScore()
@@ -230,7 +243,7 @@ std::string formatScore(int score)
         return "AW" + std::to_string(PLAYER_A_WIN - score);
     }
     if (score < PLAYER_B_WIN + 500){
-        return "BW" + std::to_string(score + PLAYER_B_WIN);
+        return "BW" + std::to_string(score - PLAYER_B_WIN);
     }
     return std::to_string(score);
 }
@@ -280,10 +293,10 @@ void PlayCalculator::generateChild(int playPos)
     Board* newBoard = board->copy();
     newBoard->play(playPos);
     std::string boardString = newBoard->getBoardCode();
-    if (playsHashMap->find(boardString) == playsHashMap->end())
+    if (playsHashMap->find(boardString) == playsHashMap->end() || true)
     {
         childPlay[playPos] = new PlayCalculator(newBoard, depth + 1, maxDepth, playsHashMap);
-        (*playsHashMap)[boardString] = childPlay[playPos];
+        //(*playsHashMap)[boardString] = childPlay[playPos];
     }
     else 
     {
@@ -315,32 +328,75 @@ int getMaxChild(int depth)
             * (double)(BOARD_WIDTH - 2) + 2);
 }
 
+int getMaxScoreDiif(int depth)
+{
+    return (int)(pow(2, (double)(-depth + 5) * 0.3) * 10.0);
+}
+
 void PlayCalculator::disableChilds()
 {
-    if (maxDepth - depth < MIN_DEPTH) return;
+    if (maxDepth - depth < 4) return;
+    int maxScoreDiff = getMaxScoreDiif(maxDepth - depth);
+    int previousMaxScoreDiff = getMaxScoreDiif(maxDepth - depth - 1);
 
-    int maxChild = getMaxChild(maxDepth - depth);
-    int previousMaxChild = getMaxChild(maxDepth - depth - 1);
-
-    if (previousMaxChild == maxChild) return;
+    if (previousMaxScoreDiff - maxScoreDiff < 1) return;
     
-    if (depth == 0)
-    {
-        printf("%d\t%d\t%d", maxChild, previousMaxChild, maxDepth);
-    }
+    int* bestPlays = getPlaysRanking();
+    if (bestPlays[0] == -1) return;
+    int bestPlay = childPlay[bestPlays[0]]->getScore();
 
-    int* bestPlay = getPlaysRanking();
-    for (int i = maxChild + 1; i < BOARD_WIDTH; i++) {
-        if (bestPlay[i] == -1) continue;
-        childPlay[bestPlay[i]] = nullptr;
+    for (int i = 1; i < BOARD_WIDTH; i++) {
+        if (bestPlays[i] == -1 
+                || abs(bestPlay - childPlay[bestPlays[i]]->getScore()) <= maxScoreDiff) continue;
+
+        childPlay[bestPlays[i]]->recursiveDelete();
+        delete childPlay[bestPlays[i]];
+        childPlay[bestPlays[i]] = nullptr;
     }
+    delete [] bestPlays;
 }
 
-void PlayCalculator::processChild()
+bool PlayCalculator::processChild()
 {
+    int maxChild = getMaxChild(maxDepth - depth);
+    if (maxChild < 4 && maxChild > 1)
+    {
+        return processChildAsync();
+    }
+    
+    bool result = false;
+
     for (int i = 0; i < BOARD_WIDTH; i++) {
         if (childPlay[i] == nullptr) continue;
-        childPlay[i]->process(maxDepth);
+        result |= childPlay[i]->process(maxDepth);
     }
+    return result;
 }
 
+bool PlayCalculator::processChildAsync()
+{
+    std::thread threads[BOARD_WIDTH];
+    std::future<bool> results[BOARD_WIDTH];
+    for (int i = 0; i < BOARD_WIDTH; i++)
+    {
+        if (childPlay[i] == nullptr) continue;
+        std::promise<bool> promise;
+        results[i] = promise.get_future();
+        threads[i] = std::thread(newChildThread, childPlay[i], maxDepth, std::move(promise));
+    }
+
+    bool result = false;
+    for (int i = 0; i < BOARD_WIDTH; i++)
+    {
+        if (!threads[i].joinable()) continue;
+        threads[i].join();
+        result |= results[i].get();
+    }
+    return result;
+}
+
+void newChildThread(PlayCalculator* child, int maxDepth, std::promise<bool> &&promise)
+{
+    bool result = child->process(maxDepth);
+    promise.set_value(result);
+}

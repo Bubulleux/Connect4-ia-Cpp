@@ -1,23 +1,37 @@
 #include "board.h"
 #include <algorithm>
 #include <cstdio>
+#include <cstdlib>
 #include <iostream>
 #include <ostream>
 #include <string>
 
+const int boardSize = (BOARD_WIDTH * BOARD_WIDTH * 2) / 8 + 1;
+const char cellSymbolArray[4] = {0x5F, 0x58, 0x4f, 0x3f};
 
 Board::Board()
 {
-    this->clear();
+    board = new char[boardSize];
+    clear();
     lastPlay = -1;
 }
 
 Board::Board(std::string boardTxt) {
+    board = new char[boardSize];
     clear();
     for (int i = 0; i < boardTxt.length(); i++) {
-        setToken(i % BOARD_WIDTH, i / BOARD_WIDTH, boardTxt[i]);    
+        for (char j = 0; j < 4; j++) {
+            if (cellSymbolArray[j] != boardTxt[i]) continue;
+            setToken(i % BOARD_WIDTH, i / BOARD_WIDTH, j);    
+            break;
+        }
     }
     lastPlay = - 1;
+}
+
+Board::~Board() 
+{
+    delete [] board;
 }
 
 char Board::getToken(int x, int y)
@@ -25,7 +39,9 @@ char Board::getToken(int x, int y)
     if (x < 0 || x >= BOARD_WIDTH || y < 0 || y >= BOARD_HEIGHT) {
         return TOKEN_ERROR;
     }
-    return this->board[x][y];
+    int bitIndex = x + y * BOARD_WIDTH;
+    char cellValue = (board[bitIndex / 4] >> ((bitIndex % 4) * 2)) & 0b11;
+    return cellValue; 
 }
 
 Board* Board::copy()
@@ -42,7 +58,11 @@ Board* Board::copy()
 
 void Board::setToken(int x, int y, char token_value)
 {
-    this->board[x][y] = token_value;    
+    int bitIndex = x + y * BOARD_WIDTH;
+    int offset = (bitIndex % 4) * 2;
+    char cellValue = (board[bitIndex / 4] & ~(0b11 << offset)) |
+        (token_value << offset);
+    board[bitIndex / 4] = cellValue;
 }
 
 void Board::play(int x) 
@@ -176,14 +196,14 @@ std::string Board::getBoardCode()
 {
     std::string result = "";
     for (int i = 0; i < BOARD_HEIGHT * BOARD_WIDTH; i++) {
-        result += getToken(i % BOARD_WIDTH, i / BOARD_WIDTH);
+        result += cellSymbolArray[getToken(i % BOARD_WIDTH, i / BOARD_WIDTH)];
     }
     return result;
 }
 
 BoardLine Board::getLine(int start_x, int start_y, int vel_x, int vel_y, int size)
 {
-    BoardLine boardLine = {new char[size], size};
+    BoardLine boardLine = {new char[size + 1], size};
     for (int i = 0; i < size; i++) {
         boardLine.lineContent[i] = getToken(start_x + vel_x * i, start_y + vel_y * i);
     }
@@ -191,7 +211,7 @@ BoardLine Board::getLine(int start_x, int start_y, int vel_x, int vel_y, int siz
 }
 
 BoardLine* Board::getAllLines() {
-    BoardLine *result = new BoardLine[BOARD_LINES_COUNT];
+    BoardLine* result = new BoardLine[BOARD_LINES_COUNT];
     int boardLineIndex = 0;
 
     for (int i = 0; i < BOARD_WIDTH; i++) {
@@ -232,12 +252,15 @@ int Board::getBoardScore()
     for (int i = 0; i < BOARD_LINES_COUNT; i++) {
         BoardLine line = lines[i];
         LineWinValue score = getLinesScore(line);
+        delete [] line.lineContent;
         aScore += score.a_token_count * score.a_token_count;
         bScore += score.b_token_count * score.b_token_count;
         if (score.a_best_alignment >= 4 || score.b_best_alignment >= 4) {
             return score.a_best_alignment >= 4 ? PLAYER_A_WIN : PLAYER_B_WIN;
         }
+
     }
+    delete[] lines;
     return aScore - bScore;
 }
 
@@ -250,7 +273,8 @@ LineWinValue getLinesScore(BoardLine line) {
     char previousToken = TOKEN_ERROR;
     int bestAlignment = 0;
     for (int i = 0; i <= line.lineSize; i++) {
-        char token = line.lineContent[i];
+        char token = 0;
+        token = line.lineContent[i];
         if ((playerSpace != token && token != NO_TOKEN) || i == line.lineSize)
         {
             if (playerSpace == TOKEN_A) {
