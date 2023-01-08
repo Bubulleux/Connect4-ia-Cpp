@@ -23,46 +23,46 @@ class PlayCalculator
         ~PlayCalculator();
         void recursiveDelete();
 
-        void setDepth(int newDepth);
+        void setDepth(unsigned short newDepth);
 
         bool process();
-        bool process(int processDepth);
+        bool process(unsigned short processDepth);
 
-        int getScore();
-        int* getPlaysScore();
-        int getBestPlay();
-        int* getPlaysRanking();
+        short getScore();
+        short* getPlaysScore();
+        char getBestPlay();
+        char* getPlaysRanking();
         int getPositionCalculatedCount();
         float getProgress();
-        PlayCalculator* getChild(int index);
-        int getPlayCount();
+        PlayCalculator* getChild(unsigned short index);
+        char getPlayCount();
 
-        void print(int printMaxDepth);
+        void print(unsigned short printMaxDepth);
         void printBestPlay();
         void printEndGame();
 
     private:
-        PlayCalculator(Board* board, int depth, int maxDepth, std::unordered_map<std::string, PlayCalculator*>* playsHashMap);
+        PlayCalculator(Board* board, unsigned short depth, unsigned short maxDepth, std::unordered_map<std::string, PlayCalculator*>* playsHashMap);
 
         Board* board;
-        int depth;
-        int maxDepth;
+        unsigned short depth;
+        unsigned short maxDepth;
         PlayCalculator* childPlay[BOARD_WIDTH];
         std::unordered_map<std::string, PlayCalculator*>* playsHashMap;
-        int score;
-        int boardStupidScore;
+        short score;
+        short boardStupidScore;
         int childCount;
         char player;
         bool childGenerated;
 
         void calculateChildScore();
         void generateChilds();
-        void generateChild(int playPos);
+        void generateChild(char playPos);
         void disableChilds();
         bool processChild();
         bool processChildAsync();
 
-        void printBestPlay(int depth);
+        void printBestPlay(unsigned short depth);
 
 };
 

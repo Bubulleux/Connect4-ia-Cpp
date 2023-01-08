@@ -20,21 +20,22 @@
 #define EXAMPLE_BOARD_7 "X__XOXX___OXO____XOX____OO_____XO_____OX__"
 
 #define CANT_WIN -1
-#define PLAYER_A_WIN INT_MAX
-#define PLAYER_B_WIN INT_MIN
+#define PLAYER_A_WIN SHRT_MAX
+#define PLAYER_B_WIN SHRT_MIN
+#define NULL_PLAY 0xff
 
 struct BoardLine
 {
     char *lineContent = nullptr;
-    int lineSize = 0;
+    char lineSize = 0;
 };
 
 struct LineWinValue 
 {
-    int a_best_alignment;
-    int b_best_alignment;
-    int a_token_count;
-    int b_token_count;
+    char a_best_alignment;
+    char b_best_alignment;
+    char a_token_count;
+    char b_token_count;
 };
 
 class Board {
@@ -43,15 +44,15 @@ class Board {
         Board(std::string boardTXT);
         ~Board();
         Board* copy();
-        char getToken(int x, int y);
-        std::string getTokenString(int x, int y);
-        void play(int x);
-        void play(int x, char token);
-        bool canPlayHere(int x);
-        int getBoardScore();
+        char getToken(char x, char y);
+        std::string getTokenString(char x, char y);
+        void play(char x);
+        void play(char x, char token);
+        bool canPlayHere(char x);
+        short getBoardScore();
 
-        int getTokenCount();
-        int getStackHeight(int x);
+        short getTokenCount();
+        char getStackHeight(char x);
         char getNextPlayer();
         char getWinPlayer();
 
@@ -62,12 +63,12 @@ class Board {
     
     private:
         char* board;
-        int lastPlay;
-        void setToken(int x, int y, char token_value);
-        BoardLine getLine(int start_x, int start_y, int vel_x, int vel_y, int line_size);
+        char lastPlay;
+        void setToken(char x, char y, char token_value);
+        BoardLine getLine(char start_x, char start_y, char vel_x, char vel_y, char line_size);
         BoardLine* getAllLines();
         
 };
 
 LineWinValue getLinesScore(BoardLine line);
-std::string formatScore(int score);
+std::string formatScore(short score);
