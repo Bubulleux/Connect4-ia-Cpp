@@ -34,7 +34,7 @@ class PlayCalculator
         char* getPlaysRanking();
         int getPositionCalculatedCount();
         float getProgress();
-        PlayCalculator* getChild(unsigned short index);
+        PlayCalculator* getChild(char index);
         char getPlayCount();
 
         void print(unsigned short printMaxDepth);
@@ -66,4 +66,4 @@ class PlayCalculator
 
 };
 
-void newChildThread(PlayCalculator* child, int maxDepth, std::promise<bool> && promise);
+void newChildThread(PlayCalculator* child, unsigned short maxDepth, std::promise<bool> && promise);

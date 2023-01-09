@@ -97,8 +97,8 @@ short* PlayCalculator::getPlaysScore()
 
 char PlayCalculator::getBestPlay()
 {
-    char indexA = -1;
-    char indexB = -1;
+    char indexA = NULL_PLAY;
+    char indexB = NULL_PLAY;
     short maxScore = PLAYER_B_WIN;
     short minScore = PLAYER_A_WIN;
     for (char i = 0; i < BOARD_WIDTH;  i++) {
@@ -125,7 +125,7 @@ char* PlayCalculator::getPlaysRanking()
 {
     char* result = new char[BOARD_WIDTH];
     for (char i = 0; i < BOARD_WIDTH; i++) {
-        result[i] = -1;
+        result[i] = NULL_PLAY;
     }
     for (short i = 0; i < BOARD_WIDTH; i++) {
         if (childPlay[i] == nullptr)
@@ -154,7 +154,7 @@ int PlayCalculator::getPositionCalculatedCount()
         return childCount;
     }
     int childCount = 1;
-    for (int i = 0; i < BOARD_WIDTH; i++) {
+    for (char i = 0; i < BOARD_WIDTH; i++) {
         if (childPlay[i] == nullptr)
         {
             continue;
@@ -171,7 +171,7 @@ float PlayCalculator::getProgress()
         return 1.0;
     }
     float progess = 0.0;
-    for (int i = 0; i < BOARD_WIDTH; i++) {
+    for (char i = 0; i < BOARD_WIDTH; i++) {
         if (childPlay[i] == nullptr)
         {
             progess += board->canPlayHere(i) ? 0 : 1.0 / (float)BOARD_WIDTH;
@@ -182,23 +182,23 @@ float PlayCalculator::getProgress()
     return progess;
 }
 
-PlayCalculator* PlayCalculator::getChild(int index)
+PlayCalculator* PlayCalculator::getChild(char index)
 {
     return childPlay[index];
 }
 
-void PlayCalculator::print(int printMaxDepth)
+void PlayCalculator::print(unsigned short printMaxDepth)
 {
     if (depth >= printMaxDepth)
     {
         return;
     }
-    for (int i = 0; i < BOARD_WIDTH; i++) {
+    for (char i = 0; i < BOARD_WIDTH; i++) {
         if (childPlay[i] == nullptr)
         {
             continue;
         }
-        for (int j = 0; j < depth; j++) {
+        for (unsigned short j = 0; j < depth; j++) {
             std::cout << "\t";
         }
         std::cout << i + 1 << ": " << formatScore(childPlay[i]->getScore()) << "(" << childPlay[i]->getPositionCalculatedCount() << ")" << std::endl;
@@ -212,10 +212,10 @@ void PlayCalculator::printBestPlay()
     std::cout << std::endl;
 }
 
-void PlayCalculator::printBestPlay(int depth)
+void PlayCalculator::printBestPlay(unsigned short depth)
 {
-    int bestPlay = getBestPlay();
-    if (bestPlay == -1) 
+    char bestPlay = getBestPlay();
+    if (bestPlay == NULL_PLAY) 
     {
         std::cout << formatScore(boardStupidScore);
         return;
@@ -226,8 +226,8 @@ void PlayCalculator::printBestPlay(int depth)
 
 void PlayCalculator::printEndGame()
 {
-    int bestPlay = getBestPlay();
-    if (bestPlay == -1)
+    char bestPlay = getBestPlay();
+    if (bestPlay == NULL_PLAY)
     {
         *board >> std::cout;
         calculateChildScore();
@@ -237,7 +237,7 @@ void PlayCalculator::printEndGame()
     childPlay[bestPlay]->printEndGame();
 }
 
-std::string formatScore(int score)
+std::string formatScore(short score)
 {
     if (score > PLAYER_A_WIN - 500){
         return "AW" + std::to_string(PLAYER_A_WIN - score);
@@ -255,15 +255,15 @@ void PlayCalculator::calculateChildScore()
         score = boardStupidScore;
         return;
     }
-    int minScore = PLAYER_A_WIN;
-    int maxScore = PLAYER_B_WIN;
-    for (int i = 0; i < BOARD_WIDTH; i++) {
+    short minScore = PLAYER_A_WIN;
+    short maxScore = PLAYER_B_WIN;
+    for (char i = 0; i < BOARD_WIDTH; i++) {
         if (childPlay[i] == nullptr) {
             continue;
         }
-        int currentScore = childPlay[i]->getScore();
-        minScore = std::min(minScore, currentScore);
-        maxScore = std::max(maxScore, currentScore);
+        char currentScore = childPlay[i]->getScore();
+        minScore = (int)std::min((int)minScore, (int)currentScore);
+        maxScore = (int)std::max((int)maxScore, (int)currentScore);
     }
     score = player == TOKEN_A ? maxScore : minScore;
     if (score > PLAYER_A_WIN - 500)
@@ -279,13 +279,13 @@ void PlayCalculator::calculateChildScore()
 void PlayCalculator::generateChilds() {
     if (childGenerated) return;
 
-    for (int i = 0; i < BOARD_WIDTH; i++) { 
+    for (char i = 0; i < BOARD_WIDTH; i++) { 
         generateChild(i);
     }
     childGenerated = true;
 }
 
-void PlayCalculator::generateChild(int playPos)
+void PlayCalculator::generateChild(char playPos)
 {
     
     if (childPlay[playPos] != nullptr || !board->canPlayHere(playPos)) return;
@@ -305,14 +305,14 @@ void PlayCalculator::generateChild(int playPos)
     delete newBoard;
 }
 
-int PlayCalculator::getPlayCount()
+char PlayCalculator::getPlayCount()
 {
     if (!childGenerated)
     {
         return 0;
     }
-    int result = 0;
-    for (int i = 0; i < BOARD_WIDTH; i++) {
+    char result = 0;
+    for (char i = 0; i < BOARD_WIDTH; i++) {
         if (childPlay[i] == nullptr)
         {
             continue;
@@ -322,9 +322,9 @@ int PlayCalculator::getPlayCount()
     return result;
 }
 
-int getMaxChild(unsigned short depth)
+char getMaxChild(unsigned short depth)
 {
-    return (int)(pow(2, (double)(- depth + MIN_DEPTH) * SLOP_MULTIPLYER)
+    return (char)(pow(2, (double)(- depth + MIN_DEPTH) * SLOP_MULTIPLYER)
             * (double)(BOARD_WIDTH - 2) + 2);
 }
 
@@ -342,11 +342,11 @@ void PlayCalculator::disableChilds()
     if (previousMaxScoreDiff - maxScoreDiff < 1) return;
     
     char* bestPlays = getPlaysRanking();
-    if (bestPlays[0] == -1) return;
+    if (bestPlays[0] == NULL_PLAY) return;
     char bestPlay = childPlay[bestPlays[0]]->getScore();
 
     for (char i = 1; i < BOARD_WIDTH; i++) {
-        if (bestPlays[i] == -1 
+        if (bestPlays[i] == NULL_PLAY 
                 || abs(bestPlay - childPlay[bestPlays[i]]->getScore()) <= maxScoreDiff) continue;
 
         childPlay[bestPlays[i]]->recursiveDelete();
@@ -358,7 +358,7 @@ void PlayCalculator::disableChilds()
 
 bool PlayCalculator::processChild()
 {
-    int maxChild = getMaxChild(maxDepth - depth);
+    char maxChild = getMaxChild(maxDepth - depth);
     if (maxChild < 4 && maxChild > 1)
     {
         return processChildAsync();

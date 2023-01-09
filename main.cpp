@@ -43,9 +43,9 @@ void makeIAPlay(Board* board, unordered_map<std::string, PlayCalculator*>* plays
     playCalculator->printEndGame();
     playCalculator->printBestPlay();
 
-    int* playsRanking = playCalculator->getPlaysRanking();
-    for (int i = 0; i < BOARD_WIDTH; i++) {
-        if (playsRanking[i] == -1)
+    char* playsRanking = playCalculator->getPlaysRanking();
+    for (char i = 0; i < BOARD_WIDTH; i++) {
+        if (playsRanking[i] == NULL_PLAY)
         {
             continue;
         }
@@ -55,8 +55,8 @@ void makeIAPlay(Board* board, unordered_map<std::string, PlayCalculator*>* plays
     cout << formatScore(playCalculator->getScore()) << endl;
     chrono::duration<double> diffTime = stop - start;
     cout << diffTime.count() << endl;
-    int bestPlay = playCalculator->getBestPlay();
-    if (bestPlay == -1)
+    char bestPlay = playCalculator->getBestPlay();
+    if (bestPlay == NULL_PLAY)
     {
         printf("Error no best play\n");
         exit(1);

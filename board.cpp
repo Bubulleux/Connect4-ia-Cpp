@@ -13,7 +13,7 @@ Board::Board()
 {
     board = new char[boardSize];
     clear();
-    lastPlay = -1;
+    lastPlay = NULL_PLAY;
 }
 
 Board::Board(std::string boardTxt) {
@@ -34,7 +34,7 @@ Board::~Board()
     delete [] board;
 }
 
-char Board::getToken(int x, int y)
+char Board::getToken(char x, char y)
 {
     if (x < 0 || x >= BOARD_WIDTH || y < 0 || y >= BOARD_HEIGHT) {
         return TOKEN_ERROR;
@@ -47,8 +47,8 @@ char Board::getToken(int x, int y)
 Board* Board::copy()
 {
     Board* board = new Board();
-    for (int x = 0; x < BOARD_WIDTH; x++) {
-        for (int y = 0; y < BOARD_HEIGHT; y++) {
+    for (char x = 0; x < BOARD_WIDTH; x++) {
+        for (char y = 0; y < BOARD_HEIGHT; y++) {
             board->setToken(x, y, getToken(x, y));
         } 
     }
@@ -56,7 +56,7 @@ Board* Board::copy()
     return board;
 }
 
-void Board::setToken(int x, int y, char token_value)
+void Board::setToken(char x, char y, char token_value)
 {
     int bitIndex = x + y * BOARD_WIDTH;
     int offset = (bitIndex % 4) * 2;
@@ -65,12 +65,12 @@ void Board::setToken(int x, int y, char token_value)
     board[bitIndex / 4] = cellValue;
 }
 
-void Board::play(int x) 
+void Board::play(char x) 
 {
    play(x, getNextPlayer()); 
 }
 
-void Board::play(int x, char token) 
+void Board::play(char x, char token) 
 {
     if (!canPlayHere(x)) {
         return;
@@ -79,19 +79,19 @@ void Board::play(int x, char token)
     setToken(x, getStackHeight(x), token);
 }
 
-int Board::getTokenCount() 
+unsigned short Board::getTokenCount() 
 {
-    int result = 0;
-    for (int i = 0; i < BOARD_WIDTH; i++) 
+    unsigned short result = 0;
+    for (char i = 0; i < BOARD_WIDTH; i++) 
     {
         result += this->getStackHeight(i);
     }
     return result;
 }
 
-int Board::getStackHeight(int x) 
+char Board::getStackHeight(char x) 
 {
-    for (int i = 0; i < BOARD_HEIGHT; i++) 
+    for (char i = 0; i < BOARD_HEIGHT; i++) 
     {
         if (this->getToken(x, i) == NO_TOKEN) {
             return i;
@@ -102,11 +102,11 @@ int Board::getStackHeight(int x)
 
 char Board::getNextPlayer()
 {
-    int aTokenCount = 0;
-    int bTokenCount = 0;
+    unsigned short aTokenCount = 0;
+    unsigned short bTokenCount = 0;
 
-    for (int x = 0; x < BOARD_WIDTH; x++) {
-        for (int y = 0; y < BOARD_HEIGHT; y++) {
+    for (char x = 0; x < BOARD_WIDTH; x++) {
+        for (char y = 0; y < BOARD_HEIGHT; y++) {
             char token = this->getToken(x, y);
             switch (token) {
                 case TOKEN_A:
@@ -123,8 +123,8 @@ char Board::getNextPlayer()
 
 void Board::clear()
 {
-    for (int x = 0; x < BOARD_WIDTH; x++) {
-        for (int y = 0; y < BOARD_HEIGHT; y++) {
+    for (char x = 0; x < BOARD_WIDTH; x++) {
+        for (char y = 0; y < BOARD_HEIGHT; y++) {
             setToken(x, y, NO_TOKEN);
         }    
     }
@@ -149,7 +149,7 @@ char Board::getWinPlayer()
 }
 
 
-std::string Board::getTokenString(int x, int y) 
+std::string Board::getTokenString(char x, char y) 
 {
     char token = getToken(x, y);
     switch (token) {
@@ -201,10 +201,10 @@ std::string Board::getBoardCode()
     return result;
 }
 
-BoardLine Board::getLine(int start_x, int start_y, int vel_x, int vel_y, int size)
+BoardLine Board::getLine(char start_x, char start_y, char vel_x, char vel_y, char size)
 {
     BoardLine boardLine = {new char[size + 1], size};
-    for (int i = 0; i < size; i++) {
+    for (char i = 0; i < size; i++) {
         boardLine.lineContent[i] = getToken(start_x + vel_x * i, start_y + vel_y * i);
     }
     return boardLine;
@@ -214,23 +214,23 @@ BoardLine* Board::getAllLines() {
     BoardLine* result = new BoardLine[BOARD_LINES_COUNT];
     int boardLineIndex = 0;
 
-    for (int i = 0; i < BOARD_WIDTH; i++) {
+    for (char i = 0; i < BOARD_WIDTH; i++) {
         result[boardLineIndex] = getLine(i, 0, 0, 1, BOARD_HEIGHT);
         boardLineIndex++;
     }
 
-    for (int i = 0; i < BOARD_HEIGHT; i++) {
+    for (char i = 0; i < BOARD_HEIGHT; i++) {
         result[boardLineIndex] = getLine(0, i, 1, 0, BOARD_WIDTH);
         boardLineIndex++;
     }
 
-    for (int i = 0; i < (BOARD_WIDTH + BOARD_HEIGHT - 7); i++) {
+    for (char i = 0; i < (BOARD_WIDTH + BOARD_HEIGHT - 7); i++) {
         result[boardLineIndex] = getLine(i < BOARD_HEIGHT - 4 ? 0 : i - BOARD_HEIGHT + 4, i < BOARD_HEIGHT - 4 ? BOARD_HEIGHT - 4 - i : 0, 1, 1, 
                 BOARD_HEIGHT - (i < BOARD_HEIGHT - 4 ? BOARD_HEIGHT - 4 - i : 0) - (i > BOARD_WIDTH - 4 ? i - BOARD_WIDTH + 4 : 0));
         boardLineIndex ++;
     }
     
-    for (int i = 0; i < (BOARD_WIDTH + BOARD_HEIGHT - 7); i++) {
+    for (char i = 0; i < (BOARD_WIDTH + BOARD_HEIGHT - 7); i++) {
         result[boardLineIndex] = getLine(i < BOARD_HEIGHT - 4 ? BOARD_WIDTH - 1 : BOARD_WIDTH - i + BOARD_HEIGHT - 5, i < BOARD_HEIGHT - 4 ? BOARD_HEIGHT - 4 - i : 0, -1, 1, 
                 BOARD_HEIGHT - (i < BOARD_HEIGHT - 4 ? BOARD_HEIGHT - 4 - i : 0) - (i > BOARD_WIDTH - 4 ? i - BOARD_WIDTH + 4 : 0));
         boardLineIndex ++;
@@ -239,16 +239,16 @@ BoardLine* Board::getAllLines() {
     return result;
 }
 
-bool Board::canPlayHere(int x) 
+bool Board::canPlayHere(char x) 
 {
     return getStackHeight(x) < BOARD_HEIGHT;
 }
 
-int Board::getBoardScore()
+short Board::getBoardScore()
 {
     BoardLine *lines = getAllLines();
-    int aScore = 0;
-    int bScore = 0;
+    short aScore = 0;
+    short bScore = 0;
     for (int i = 0; i < BOARD_LINES_COUNT; i++) {
         BoardLine line = lines[i];
         LineWinValue score = getLinesScore(line);
@@ -267,24 +267,24 @@ int Board::getBoardScore()
 LineWinValue getLinesScore(BoardLine line) {
     LineWinValue lineWinValue = {0, 0, 0, 0};
     char playerSpace = NO_TOKEN;
-    int spaceSize = 0;
-    int token_count = 0;
-    int lastSpaceSize = 0;
+    char spaceSize = 0;
+    char token_count = 0;
+    char lastSpaceSize = 0;
     char previousToken = TOKEN_ERROR;
-    int bestAlignment = 0;
-    for (int i = 0; i <= line.lineSize; i++) {
+    char bestAlignment = 0;
+    for (char i = 0; i <= line.lineSize; i++) {
         char token = 0;
         token = line.lineContent[i];
         if ((playerSpace != token && token != NO_TOKEN) || i == line.lineSize)
         {
             if (playerSpace == TOKEN_A) {
-                lineWinValue.a_token_count = std::max(lineWinValue.a_token_count, spaceSize >= 4 ? token_count : 0);
-                lineWinValue.a_best_alignment = std::max(lineWinValue.a_best_alignment, spaceSize >= 4 ? bestAlignment : 0);
+                lineWinValue.a_token_count = (int)std::max((int)lineWinValue.a_token_count, spaceSize >= 4 ? (int)token_count : 0);
+                lineWinValue.a_best_alignment = (int)std::max((int)lineWinValue.a_best_alignment, spaceSize >= 4 ? (int)bestAlignment : 0);
             }
 
             if (playerSpace == TOKEN_B) {
-                lineWinValue.b_token_count = std::max(lineWinValue.b_token_count, spaceSize >= 4 ? token_count : 0);
-                lineWinValue.b_best_alignment = std::max(lineWinValue.b_best_alignment, spaceSize >= 4 ? bestAlignment : 0);
+                lineWinValue.b_token_count = (int)std::max((int)lineWinValue.b_token_count, spaceSize >= 4 ? token_count : 0);
+                lineWinValue.b_best_alignment = (int)std::max((int)lineWinValue.b_best_alignment, spaceSize >= 4 ? bestAlignment : 0);
             }
 
             playerSpace = token;

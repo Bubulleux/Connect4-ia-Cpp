@@ -22,7 +22,7 @@
 #define CANT_WIN -1
 #define PLAYER_A_WIN SHRT_MAX
 #define PLAYER_B_WIN SHRT_MIN
-#define NULL_PLAY 0xff
+#define NULL_PLAY (char)0xff
 
 struct BoardLine
 {
@@ -51,7 +51,7 @@ class Board {
         bool canPlayHere(char x);
         short getBoardScore();
 
-        short getTokenCount();
+        unsigned short getTokenCount();
         char getStackHeight(char x);
         char getNextPlayer();
         char getWinPlayer();
