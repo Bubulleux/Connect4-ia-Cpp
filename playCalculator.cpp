@@ -330,7 +330,7 @@ char getMaxChild(unsigned short depth)
 
 short getMaxScoreDiif(unsigned short depth)
 {
-    return (short)(pow(2, (double)(-depth + 5) * 0.3) * 10.0);
+    return (short)(pow(2, (double)(-depth + 5) * 0.5) * 10.0);
 }
 
 void PlayCalculator::disableChilds()
@@ -346,8 +346,8 @@ void PlayCalculator::disableChilds()
     char bestPlay = childPlay[bestPlays[0]]->getScore();
 
     for (char i = 1; i < BOARD_WIDTH; i++) {
-        if (bestPlays[i] == NULL_PLAY 
-                || abs(bestPlay - childPlay[bestPlays[i]]->getScore()) <= maxScoreDiff) continue;
+        if (bestPlays[i] == NULL_PLAY || childPlay[bestPlays[i]] == nullptr) continue;
+        if(abs(bestPlay - childPlay[bestPlays[i]]->getScore()) <= maxScoreDiff) continue;
 
         childPlay[bestPlays[i]]->recursiveDelete();
         delete childPlay[bestPlays[i]];
