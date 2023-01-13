@@ -71,7 +71,6 @@ bool PlayCalculator::process(unsigned short processDepth)
     childCount = 0;
     generateChilds();
 
-    disableChilds();
     bool result = processChild();
     calculateChildScore();
     return result;
@@ -364,12 +363,15 @@ bool PlayCalculator::processChild()
         return processChildAsync();
     }
     
+    short maxScoreDiff = getMaxScoreDiif(maxDepth - depth);
+    char* bestPlays = getPlaysRanking();
     bool result = false;
 
     for (char i = 0; i < BOARD_WIDTH; i++) {
-        if (childPlay[i] == nullptr) continue;
-        result |= childPlay[i]->process(maxDepth);
+        if (bestPlays[i] == NULL_PLAY) continue;
+        result |= childPlay[bestPlays[i]]->process(maxDepth);
     }
+    delete [] bestPlays;
     return result;
 }
 
@@ -377,12 +379,14 @@ bool PlayCalculator::processChildAsync()
 {
     std::thread threads[BOARD_WIDTH];
     std::future<bool> results[BOARD_WIDTH];
+    short maxScoreDiff = getMaxScoreDiif(maxDepth - depth);
+    char* bestPlays = getPlaysRanking();
     for (char i = 0; i < BOARD_WIDTH; i++)
     {
-        if (childPlay[i] == nullptr) continue;
+        if (bestPlays[i] == NULL_PLAY) continue;
         std::promise<bool> promise;
         results[i] = promise.get_future();
-        threads[i] = std::thread(newChildThread, childPlay[i], maxDepth, std::move(promise));
+        threads[i] = std::thread(newChildThread, childPlay[bestPlays[i]], maxDepth, std::move(promise));
     }
 
     bool result = false;

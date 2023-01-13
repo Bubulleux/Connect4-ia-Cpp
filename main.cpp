@@ -27,7 +27,7 @@ void makeIAPlay(Board* board, unordered_map<std::string, PlayCalculator*>* plays
     auto start = chrono::system_clock::now();
     auto now = start;
     bool canProcessMore = true;
-    while (((chrono::duration<double>)(now - start)).count() < 30 && canProcessMore) {
+    while (((chrono::duration<double>)(now - start)).count() < 10 && canProcessMore) {
         canProcessMore = playCalculator->process();
         now = chrono::system_clock::now();
         cout << "\r";
