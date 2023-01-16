@@ -123,10 +123,9 @@ char Board::getNextPlayer()
 
 void Board::clear()
 {
-    for (char x = 0; x < BOARD_WIDTH; x++) {
-        for (char y = 0; y < BOARD_HEIGHT; y++) {
-            setToken(x, y, NO_TOKEN);
-        }    
+    for(int i = 0; i < boardSize; i++)
+    {
+        board[i] = 0;
     }
 }
 
