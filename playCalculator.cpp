@@ -131,10 +131,12 @@ char* PlayCalculator::getPlaysRanking()
         {
             continue;
         }
-        char currentScore = childPlay[i]->getScore();
+        short currentScore = childPlay[i]->getScore();
         result[i] = i;
         for (short j = i - 1; j >= 0; j--) {
-            if (result[j] != NULL_PLAY && (childPlay[result[j]]->getScore() > currentScore ^ player == TOKEN_B ))
+            if (result[j] != NULL_PLAY && 
+                    (childPlay[result[j]]->getScore() > currentScore ^
+                     player == TOKEN_B ))
             {
                 continue;
             }
@@ -260,9 +262,9 @@ void PlayCalculator::calculateChildScore()
         if (childPlay[i] == nullptr) {
             continue;
         }
-        char currentScore = childPlay[i]->getScore();
-        minScore = (int)std::min((int)minScore, (int)currentScore);
-        maxScore = (int)std::max((int)maxScore, (int)currentScore);
+        short currentScore = childPlay[i]->getScore();
+        minScore = currentScore < minScore ? currentScore : minScore;
+        maxScore = currentScore > maxScore ? currentScore : maxScore;
     }
     score = player == TOKEN_A ? maxScore : minScore;
     if (score > PLAYER_A_WIN - 500)
