@@ -13,7 +13,7 @@ class TaskQueue
         ~TaskQueue();
 
         void addTask(PlayCalculator* play);
-        PlayCalculator popTask();
+        PlayCalculator* popTask();
         bool isEmpty();
         void clear();
         int getSize();
