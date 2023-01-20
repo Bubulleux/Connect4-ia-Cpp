@@ -1,4 +1,5 @@
 #include "playCalculator.h"
+#include <future>
 
 struct TaskElement
 {

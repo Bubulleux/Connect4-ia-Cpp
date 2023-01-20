@@ -12,7 +12,6 @@ class Threader
         void addTask(PlayCalculator* play);
         void clearTask();
         void process();
-        void processTaskQueue(int index);
 
     private:
         int threadCount;
@@ -21,3 +20,5 @@ class Threader
         TaskQueue* taskQueue;
         void incrementThreadIndex();
 };
+
+void processTaskQueue(Threader* threader, int index);

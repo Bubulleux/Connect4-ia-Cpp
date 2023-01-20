@@ -32,6 +32,21 @@ void Threader::process()
 {
     std::thread threads[threadCount];
 
-    for (int i = 0; i < threadCount, i++){
-        threads[i] = std::thread(processTaskQueue, i, 
+    for (int i = 0; i < threadCount; i++){
+        threads[i] = std::thread(processTaskQueue,this, i);
+    }
+    for (int i = 0; i < threadCount; i++){
+        threads[i].join();
+    }
+}
+
+void Threader::incrementThreadIndex()
+{
+    nextThreadIndex++;
+    nextThreadIndex %= threadCount;
+}
+
+void processTaskQueue(Threader* threader, int index)
+{
+
 }
